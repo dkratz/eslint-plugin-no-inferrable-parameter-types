@@ -8,16 +8,13 @@ const ruleTester = new ESLintUtils.RuleTester({
     tsconfigRootDir: __dirname,
   },
 });
-ruleTester.run("no-unnecessary-argument-types call", rule, {
+ruleTester.run("no-unnecessary-argument-types", rule, {
   valid: [
-    {
-      code: `const arr: string[] = [];
+    // Calls
+    `const arr: string[] = [];
         arr.map((value) => '');`,
-    },
-    {
-      code: `const arr: string[] = [];
+    `const arr: string[] = [];
         arr.map((value, index) => '');`,
-    },
     {
       code: `const arr: any[] = [];
         arr.map((value: any, index) => '');`,
@@ -28,144 +25,162 @@ ruleTester.run("no-unnecessary-argument-types call", rule, {
         arr.map((value: any, index) => '');`,
       options: [{ ignoreAnyParameters: false, unsafeRemoveAny: false }],
     },
+
+    // Declarations
+    `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr, value) => arr;`,
+    `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr: any, value: any) => arr;`,
+    `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr: any, value) => arr;`,
   ],
   invalid: [
+    // Calls
     {
       code: `const arr: string[] = [];
         arr.map((value: string, index: number) => '');`,
+      output: `const arr: string[] = [];
+        arr.map((value, index) => '');`,
       errors: [
         {
           messageId: "test",
+          line: 2,
+          column: 18,
         },
         {
           messageId: "test",
+          line: 2,
+          column: 33,
         },
       ],
-      output: `const arr: string[] = [];
-        arr.map((value, index) => '');`,
     },
     {
       code: `const arr: string[] = [];
         arr.map((value: string | number, index: number) => '');`,
+      output: `const arr: string[] = [];
+        arr.map((value: string | number, index) => '');`,
       errors: [
         {
           messageId: "test",
+          line: 2,
+          column: 42,
         },
       ],
-      output: `const arr: string[] = [];
-        arr.map((value: string | number, index) => '');`,
     },
     {
       code: `const arr: any[] = [];
         arr.map((value: any, index) => '');`,
-      errors: [
-        {
-          messageId: "test",
-        },
-      ],
       output: `const arr: any[] = [];
         arr.map((value, index) => '');`,
       options: [{ ignoreAnyParameters: false }],
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 18,
+        },
+      ],
     },
     {
       code: `const arr: string[] = [];
         arr.map((value: any, index) => '');`,
-      errors: [
-        {
-          messageId: "test",
-        },
-      ],
       output: `const arr: string[] = [];
         arr.map((value, index) => '');`,
-      options: [{ ignoreAnyParameters: false, unsafeRemoveAny: true }],
-    },
-  ],
-});
-
-ruleTester.run("no-unnecessary-argument-types variable declaration", rule, {
-  valid: [
-    {
-      code: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr, value) => arr;`,
-    },
-    {
-      code: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr: any, value: any) => arr;`,
-    },
-    {
-      code: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr: any, value) => arr;`,
-    },
-  ],
-  invalid: [
-    {
-      code: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr: string[], value: string) => arr;`,
-      errors: [
-        {
-          messageId: "test",
-        },
-        {
-          messageId: "test",
-        },
-      ],
-      output: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr, value) => arr;`,
-    },
-    {
-      code: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr: string[], value) => arr;`,
-      errors: [
-        {
-          messageId: "test",
-        },
-      ],
-      output: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr, value) => arr;`,
-    },
-    {
-      code: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr, value: string) => arr;`,
-      errors: [
-        {
-          messageId: "test",
-        },
-      ],
-      output: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr, value) => arr;`,
-    },
-    {
-      code: `type mapFn = (arr: any, value: string) => string[];
-        const map: mapFn = (arr: any, value) => arr;`,
-      errors: [
-        {
-          messageId: "test",
-        },
-      ],
-      options: [
-        {
-          ignoreAnyParameters: false,
-        },
-      ],
-      output: `type mapFn = (arr: any, value: string) => string[];
-        const map: mapFn = (arr, value) => arr;`,
-    },
-    {
-      code: `type mapFn = (arr: string[], value: string) => string[];
-        const map: mapFn = (arr: any, value) => arr;`,
-      errors: [
-        {
-          messageId: "test",
-        },
-      ],
       options: [
         {
           ignoreAnyParameters: false,
           unsafeRemoveAny: true,
         },
       ],
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 18,
+        },
+      ],
+    },
+    // Declarations
+    {
+      code: `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr: string[], value: string) => arr;`,
       output: `type mapFn = (arr: string[], value: string) => string[];
         const map: mapFn = (arr, value) => arr;`,
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 29,
+        },
+        {
+          messageId: "test",
+          line: 2,
+          column: 44,
+        },
+      ],
+    },
+    {
+      code: `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr: string[], value) => arr;`,
+      output: `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr, value) => arr;`,
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 29,
+        },
+      ],
+    },
+    {
+      code: `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr, value: string) => arr;`,
+      output: `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr, value) => arr;`,
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 34,
+        },
+      ],
+    },
+    {
+      code: `type mapFn = (arr: any, value: string) => string[];
+        const map: mapFn = (arr: any, value) => arr;`,
+      output: `type mapFn = (arr: any, value: string) => string[];
+        const map: mapFn = (arr, value) => arr;`,
+      options: [
+        {
+          ignoreAnyParameters: false,
+        },
+      ],
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 29,
+        },
+      ],
+    },
+    {
+      code: `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr: any, value) => arr;`,
+      output: `type mapFn = (arr: string[], value: string) => string[];
+        const map: mapFn = (arr, value) => arr;`,
+      options: [
+        {
+          ignoreAnyParameters: false,
+          unsafeRemoveAny: true,
+        },
+      ],
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 29,
+        },
+      ],
     },
   ],
 });
