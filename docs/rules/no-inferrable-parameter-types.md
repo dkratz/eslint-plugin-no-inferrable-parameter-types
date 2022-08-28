@@ -1,4 +1,4 @@
-# test (no-unnecessary-argument-types)
+# test (no-inferrable-parameter-types)
 
 Please describe the origin of the rule here.
 
@@ -9,17 +9,13 @@ This rule aims to...
 Examples of **incorrect** code for this rule:
 
 ```js
-
 // fill me in
-
 ```
 
 Examples of **correct** code for this rule:
 
 ```js
-
 // fill me in
-
 ```
 
 ### Options

@@ -1,4 +1,4 @@
-# eslint-plugin-argument-typecheck
+# eslint-plugin-no-inferrable-parameter-types
 
 test
 
@@ -10,37 +10,32 @@ You'll first need to install [ESLint](https://eslint.org/):
 npm i eslint --save-dev
 ```
 
-Next, install `eslint-plugin-argument-typecheck`:
+Next, install `eslint-plugin-no-inferrable-parameter-types`:
 
 ```sh
-npm install eslint-plugin-argument-typecheck --save-dev
+npm install eslint-plugin-no-inferrable-parameter-types --save-dev
 ```
 
 ## Usage
 
-Add `argument-typecheck` to the plugins section of your `.eslintrc` configuration file. You can omit the `eslint-plugin-` prefix:
+Add `no-inferrable-parameter-types` to the plugins section of your `.eslintrc` configuration file. You can omit the `eslint-plugin-` prefix:
 
 ```json
 {
-    "plugins": [
-        "argument-typecheck"
-    ]
+  "plugins": ["no-inferrable-parameter-types"]
 }
 ```
-
 
 Then configure the rules you want to use under the rules section.
 
 ```json
 {
-    "rules": {
-        "argument-typecheck/rule-name": 2
-    }
+  "rules": {
+    "no-inferrable-parameter-types/rule-name": 2
+  }
 }
 ```
 
 ## Supported Rules
 
-* Fill in provided rules here
-
-
+- Fill in provided rules here

@@ -1,5 +1,5 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
-import { rule } from "../../../lib/rules/no-unnecessary-argument-types";
+import { rule } from "../../../lib/rules/no-inferrable-parameter-types";
 
 const ruleTester = new ESLintUtils.RuleTester({
   parser: "@typescript-eslint/parser",
@@ -8,7 +8,7 @@ const ruleTester = new ESLintUtils.RuleTester({
     tsconfigRootDir: __dirname,
   },
 });
-ruleTester.run("no-unnecessary-argument-types", rule, {
+ruleTester.run("no-inferrable-parameter-types", rule, {
   valid: [
     // Calls
     `const arr: string[] = [];
