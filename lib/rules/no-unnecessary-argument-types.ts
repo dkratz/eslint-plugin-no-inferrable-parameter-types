@@ -66,59 +66,44 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
           return;
         }
 
-        const calleeType = checker.getTypeAtLocation(tsNode);
-        const calleeSignature = checker.getSignaturesOfType(
-          calleeType,
+        const parentType = checker.getTypeAtLocation(tsNode);
+        const parentSignature = checker.getSignaturesOfType(
+          parentType,
           ts.SignatureKind.Call
         )[0];
 
         const arg = tsNode.initializer;
         (arg as ts.ArrowFunction).parameters.forEach((param, paramIdx) => {
-          if (param.type) {
-            const paramType = checker.getTypeFromTypeNode(param.type);
+          if (!param.type) {
+            return;
+          }
 
-            if (options.ignoreAnyParameters && isTypeAny(paramType)) {
-              return;
-            }
+          const paramType = checker.getTypeFromTypeNode(param.type);
 
-            console.log(
-              " ",
-              param.name.getText(),
-              checker.typeToString(paramType)
+          if (options.ignoreAnyParameters && isTypeAny(paramType)) {
+            return;
+          }
+
+          if (parentSignature.parameters[paramIdx]) {
+            const parentParam = parentSignature.parameters[paramIdx];
+            const calleeType = checker.getTypeOfSymbolAtLocation(
+              parentParam,
+              tsNode
             );
 
-            if (calleeSignature.parameters[paramIdx]) {
-              const calleeParam = calleeSignature.parameters[paramIdx];
-              const calleeType = checker.getTypeOfSymbolAtLocation(
-                calleeParam,
-                tsNode
-              );
-
-              const paramTypeFromCallee = calleeType;
-
-              console.log(
-                "   ",
-                "calleeParam",
-                checker.typeToString(paramTypeFromCallee),
-                paramTypeFromCallee === paramType
-              );
-              if (
-                paramTypeFromCallee === paramType ||
-                (options.unsafeRemoveAny && isTypeAny(paramType))
-              ) {
-                const paramNode =
-                  parserServices.tsNodeToESTreeNodeMap.get(param);
-                context.report({
-                  node: paramNode,
-                  messageId: "test",
-                  fix: (fixer) => {
-                    return fixer.remove((paramNode as any).typeAnnotation);
-                  },
-                });
-              }
+            if (
+              calleeType === paramType ||
+              (options.unsafeRemoveAny && isTypeAny(paramType))
+            ) {
+              const paramNode = parserServices.tsNodeToESTreeNodeMap.get(param);
+              context.report({
+                node: paramNode,
+                messageId: "test",
+                fix: (fixer) => {
+                  return fixer.remove((paramNode as any).typeAnnotation);
+                },
+              });
             }
-          } else {
-            console.log(" ", param.name.getText(), "noType");
           }
         });
       },
@@ -137,53 +122,41 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
           if (argument.kind === ts.SyntaxKind.ArrowFunction) {
             const arg = argument as ts.ArrowFunction;
             arg.parameters.forEach((param, paramIdx) => {
-              if (param.type) {
-                const paramType = checker.getTypeFromTypeNode(param.type);
+              if (!param.type) {
+                return;
+              }
 
-                if (options.ignoreAnyParameters && isTypeAny(paramType)) {
-                  return;
-                }
+              const paramType = checker.getTypeFromTypeNode(param.type);
 
-                console.log(
-                  " ",
-                  param.name.getText(),
-                  checker.typeToString(paramType)
+              if (options.ignoreAnyParameters && isTypeAny(paramType)) {
+                return;
+              }
+
+              if (calleeSignature.parameters[argumentIdx]) {
+                const calleeParam = calleeSignature.parameters[argumentIdx];
+                const calleeType = checker.getTypeOfSymbolAtLocation(
+                  calleeParam,
+                  calleeTsNode
+                );
+                const paramTypeFromCallee = checker.getTypeOfSymbolAtLocation(
+                  calleeType.getCallSignatures()[0].parameters[paramIdx],
+                  calleeTsNode
                 );
 
-                if (calleeSignature.parameters[argumentIdx]) {
-                  const calleeParam = calleeSignature.parameters[argumentIdx];
-                  const calleeType = checker.getTypeOfSymbolAtLocation(
-                    calleeParam,
-                    calleeTsNode
-                  );
-                  const paramTypeFromCallee = checker.getTypeOfSymbolAtLocation(
-                    calleeType.getCallSignatures()[0].parameters[paramIdx],
-                    calleeTsNode
-                  );
-
-                  console.log(
-                    "   ",
-                    "calleeParam",
-                    checker.typeToString(paramTypeFromCallee),
-                    paramTypeFromCallee === paramType
-                  );
-                  if (
-                    paramTypeFromCallee === paramType ||
-                    (options.unsafeRemoveAny && isTypeAny(paramType))
-                  ) {
-                    const paramNode =
-                      parserServices.tsNodeToESTreeNodeMap.get(param);
-                    context.report({
-                      node: paramNode,
-                      messageId: "test",
-                      fix: (fixer) => {
-                        return fixer.remove((paramNode as any).typeAnnotation);
-                      },
-                    });
-                  }
+                if (
+                  paramTypeFromCallee === paramType ||
+                  (options.unsafeRemoveAny && isTypeAny(paramType))
+                ) {
+                  const paramNode =
+                    parserServices.tsNodeToESTreeNodeMap.get(param);
+                  context.report({
+                    node: paramNode,
+                    messageId: "test",
+                    fix: (fixer) => {
+                      return fixer.remove((paramNode as any).typeAnnotation);
+                    },
+                  });
                 }
-              } else {
-                console.log(" ", param.name.getText(), "noType");
               }
             });
           }
