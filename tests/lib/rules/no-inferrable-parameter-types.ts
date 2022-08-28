@@ -25,7 +25,6 @@ ruleTester.run("no-inferrable-parameter-types", rule, {
         arr.map((value: any, index) => '');`,
       options: [{ ignoreAnyParameters: false, unsafeRemoveAny: false }],
     },
-
     // Declarations
     `type mapFn = (arr: string[], value: string) => string[];
         const map: mapFn = (arr, value) => arr;`,
@@ -179,6 +178,91 @@ ruleTester.run("no-inferrable-parameter-types", rule, {
           messageId: "test",
           line: 2,
           column: 29,
+        },
+      ],
+    },
+    {
+      code: `type Request = { request: boolean; };
+        type Response = { response: boolean; };
+        type NextFunction = { nextFunction: boolean; };
+        type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
+
+        const test: RequestHandler = (
+          req: Request,
+          res: Response,
+          next: NextFunction
+        ) => {};`,
+      output: `type Request = { request: boolean; };
+        type Response = { response: boolean; };
+        type NextFunction = { nextFunction: boolean; };
+        type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
+
+        const test: RequestHandler = (
+          req,
+          res,
+          next
+        ) => {};`,
+      options: [
+        {
+          ignoreAnyParameters: false,
+          unsafeRemoveAny: true,
+        },
+      ],
+      errors: [
+        {
+          messageId: "test",
+          line: 7,
+          column: 11,
+        },
+        {
+          messageId: "test",
+          line: 8,
+          column: 11,
+        },
+        {
+          messageId: "test",
+          line: 9,
+          column: 11,
+        },
+      ],
+    },
+    {
+      code: `import type { NextFunction, Request, Response, RequestHandler } from "express";
+        
+        const test: RequestHandler = (
+          req: Request,
+          res: Response,
+          next: NextFunction
+        ) => {};`,
+      output: `import type { NextFunction, Request, Response, RequestHandler } from "express";
+        
+        const test: RequestHandler = (
+          req,
+          res: Response,
+          next
+        ) => {};`,
+      options: [
+        {
+          ignoreAnyParameters: false,
+          unsafeRemoveAny: true,
+        },
+      ],
+      errors: [
+        {
+          messageId: "test",
+          line: 4,
+          column: 11,
+        },
+        // TODO: Fix response
+        // {
+        //   messageId: "test",
+        //   line: 5,
+        //   column: 11,
+        // },
+        {
+          messageId: "test",
+          line: 6,
+          column: 11,
         },
       ],
     },

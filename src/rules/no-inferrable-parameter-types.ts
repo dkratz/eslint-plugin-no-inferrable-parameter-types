@@ -56,6 +56,15 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
     const parserServices = ESLintUtils.getParserServices(context);
     const checker = parserServices.program.getTypeChecker();
 
+    const typesAreEqual = (a: ts.Type, b: ts.Type): boolean => {
+      const formatFlags = ts.TypeFormatFlags.None;
+      return (
+        a === b ||
+        checker.typeToString(a, undefined, formatFlags) ===
+          checker.typeToString(b, undefined, formatFlags)
+      );
+    };
+
     return {
       VariableDeclarator(node) {
         const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node);
@@ -90,9 +99,8 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
               parentParam,
               tsNode
             );
-
             if (
-              calleeType === paramType ||
+              typesAreEqual(calleeType, paramType) ||
               (options.unsafeRemoveAny && isTypeAny(paramType))
             ) {
               const paramNode = parserServices.tsNodeToESTreeNodeMap.get(param);
