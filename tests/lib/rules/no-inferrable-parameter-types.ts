@@ -1,5 +1,5 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
-import { rule } from "../../../lib/rules/no-inferrable-parameter-types";
+import { rule } from "../../../src/rules/no-inferrable-parameter-types";
 
 const ruleTester = new ESLintUtils.RuleTester({
   parser: "@typescript-eslint/parser",
