@@ -31,11 +31,11 @@ Then configure the rules you want to use under the rules section.
 ```json
 {
   "rules": {
-    "no-inferrable-parameter-types/rule-name": 2
+    "no-inferrable-parameter-types/rule-name": "error"
   }
 }
 ```
 
 ## Supported Rules
 
-- Fill in provided rules here
+- `no-inferrable-parameter-types`
