@@ -52,12 +52,78 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
       ignoreAnyParameters: context.options[0]?.ignoreAnyParameters ?? true,
       unsafeRemoveAny: context.options[0]?.unsafeRemoveAny ?? false,
     };
-    return {
-      CallExpression(node) {
-        const parserServices = ESLintUtils.getParserServices(context);
-        const checker = parserServices.program.getTypeChecker();
-        const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node);
 
+    const parserServices = ESLintUtils.getParserServices(context);
+    const checker = parserServices.program.getTypeChecker();
+
+    return {
+      VariableDeclarator(node) {
+        const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node);
+        if (
+          !tsNode.type ||
+          tsNode.initializer?.kind !== ts.SyntaxKind.ArrowFunction
+        ) {
+          return;
+        }
+
+        const calleeType = checker.getTypeAtLocation(tsNode);
+        const calleeSignature = checker.getSignaturesOfType(
+          calleeType,
+          ts.SignatureKind.Call
+        )[0];
+
+        const arg = tsNode.initializer;
+        (arg as ts.ArrowFunction).parameters.forEach((param, paramIdx) => {
+          if (param.type) {
+            const paramType = checker.getTypeFromTypeNode(param.type);
+
+            if (options.ignoreAnyParameters && isTypeAny(paramType)) {
+              return;
+            }
+
+            console.log(
+              " ",
+              param.name.getText(),
+              checker.typeToString(paramType)
+            );
+
+            if (calleeSignature.parameters[paramIdx]) {
+              const calleeParam = calleeSignature.parameters[paramIdx];
+              const calleeType = checker.getTypeOfSymbolAtLocation(
+                calleeParam,
+                tsNode
+              );
+
+              const paramTypeFromCallee = calleeType;
+
+              console.log(
+                "   ",
+                "calleeParam",
+                checker.typeToString(paramTypeFromCallee),
+                paramTypeFromCallee === paramType
+              );
+              if (
+                paramTypeFromCallee === paramType ||
+                (options.unsafeRemoveAny && isTypeAny(paramType))
+              ) {
+                const paramNode =
+                  parserServices.tsNodeToESTreeNodeMap.get(param);
+                context.report({
+                  node: paramNode,
+                  messageId: "test",
+                  fix: (fixer) => {
+                    return fixer.remove((paramNode as any).typeAnnotation);
+                  },
+                });
+              }
+            }
+          } else {
+            console.log(" ", param.name.getText(), "noType");
+          }
+        });
+      },
+      CallExpression(node) {
+        const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node);
         const calleeTsNode = parserServices.esTreeNodeToTSNodeMap.get(
           node.callee
         );
