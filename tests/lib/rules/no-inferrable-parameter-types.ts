@@ -25,6 +25,17 @@ ruleTester.run("no-inferrable-parameter-types", rule, {
         arr.map((value: any, index) => '');`,
       options: [{ ignoreAnyParameters: false, unsafeRemoveAny: false }],
     },
+    {
+      code: `type mapFn = (arr: any, value: string) => string[];
+        const map: mapFn = (arr: any, value) => arr;`,
+      options: [
+        {
+          ignoreAnyParameters: false,
+          unsafeRemoveAny: true,
+          removeExplicitImplicitAny: false,
+        },
+      ],
+    },
     // Declarations
     `type mapFn = (arr: string[], value: string) => string[];
         const map: mapFn = (arr, value) => arr;`,
@@ -71,7 +82,9 @@ ruleTester.run("no-inferrable-parameter-types", rule, {
         arr.map((value: any, index) => '');`,
       output: `const arr: any[] = [];
         arr.map((value, index) => '');`,
-      options: [{ ignoreAnyParameters: false }],
+      options: [
+        { ignoreAnyParameters: false, removeExplicitImplicitAny: true },
+      ],
       errors: [
         {
           messageId: "test",
@@ -152,6 +165,7 @@ ruleTester.run("no-inferrable-parameter-types", rule, {
       options: [
         {
           ignoreAnyParameters: false,
+          removeExplicitImplicitAny: true,
         },
       ],
       errors: [
@@ -171,6 +185,26 @@ ruleTester.run("no-inferrable-parameter-types", rule, {
         {
           ignoreAnyParameters: false,
           unsafeRemoveAny: true,
+        },
+      ],
+      errors: [
+        {
+          messageId: "test",
+          line: 2,
+          column: 29,
+        },
+      ],
+    },
+    {
+      code: `type mapFn = (arr: any, value: string) => string[];
+        const map: mapFn = (arr: any, value) => arr;`,
+      output: `type mapFn = (arr: any, value: string) => string[];
+        const map: mapFn = (arr, value) => arr;`,
+      options: [
+        {
+          ignoreAnyParameters: false,
+          unsafeRemoveAny: true,
+          removeExplicitImplicitAny: true,
         },
       ],
       errors: [

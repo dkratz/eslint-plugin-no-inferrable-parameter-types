@@ -47,6 +47,10 @@ exports.rule = utils_1.ESLintUtils.RuleCreator.withoutDocs({
                     unsafeRemoveAny: {
                         type: "boolean",
                     },
+                    removeExplicitImplicitAny: {
+                        type: "boolean",
+                        description: "Remove explicit any that are there to cover for implicit anys. Might result in errors if noImplicitAny is enabled.",
+                    },
                 },
                 additionalProperties: false,
             },
@@ -59,14 +63,16 @@ exports.rule = utils_1.ESLintUtils.RuleCreator.withoutDocs({
         {
             ignoreAnyParameters: true,
             unsafeRemoveAny: false,
+            removeExplicitImplicitAny: false,
         },
     ],
     create(context) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         // TODO: Why isn't defaultOptions applied?
         const options = {
             ignoreAnyParameters: (_b = (_a = context.options[0]) === null || _a === void 0 ? void 0 : _a.ignoreAnyParameters) !== null && _b !== void 0 ? _b : true,
             unsafeRemoveAny: (_d = (_c = context.options[0]) === null || _c === void 0 ? void 0 : _c.unsafeRemoveAny) !== null && _d !== void 0 ? _d : false,
+            removeExplicitImplicitAny: (_f = (_e = context.options[0]) === null || _e === void 0 ? void 0 : _e.removeExplicitImplicitAny) !== null && _f !== void 0 ? _f : false,
         };
         const parserServices = utils_1.ESLintUtils.getParserServices(context);
         const checker = parserServices.program.getTypeChecker();
@@ -100,6 +106,9 @@ exports.rule = utils_1.ESLintUtils.RuleCreator.withoutDocs({
                         const calleeType = checker.getTypeOfSymbolAtLocation(parentParam, tsNode);
                         if (typesAreEqual(calleeType, paramType) ||
                             (options.unsafeRemoveAny && isTypeAny(paramType))) {
+                            if (isTypeAny(calleeType) && !options.removeExplicitImplicitAny) {
+                                return;
+                            }
                             const paramNode = parserServices.tsNodeToESTreeNodeMap.get(param);
                             context.report({
                                 node: paramNode,
@@ -134,6 +143,10 @@ exports.rule = utils_1.ESLintUtils.RuleCreator.withoutDocs({
                                 const paramTypeFromCallee = checker.getTypeOfSymbolAtLocation(calleeType.getCallSignatures()[0].parameters[paramIdx], calleeTsNode);
                                 if (paramTypeFromCallee === paramType ||
                                     (options.unsafeRemoveAny && isTypeAny(paramType))) {
+                                    if (isTypeAny(paramTypeFromCallee) &&
+                                        !options.removeExplicitImplicitAny) {
+                                        return;
+                                    }
                                     const paramNode = parserServices.tsNodeToESTreeNodeMap.get(param);
                                     context.report({
                                         node: paramNode,

@@ -7,6 +7,7 @@ type Options = [
   {
     ignoreAnyParameters?: boolean;
     unsafeRemoveAny?: boolean;
+    removeExplicitImplicitAny?: boolean;
   }
 ];
 
@@ -32,6 +33,11 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
           unsafeRemoveAny: {
             type: "boolean",
           },
+          removeExplicitImplicitAny: {
+            type: "boolean",
+            description:
+              "Remove explicit any that are there to cover for implicit anys. Might result in errors if noImplicitAny is enabled.",
+          },
         },
         additionalProperties: false,
       },
@@ -44,6 +50,7 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
     {
       ignoreAnyParameters: true,
       unsafeRemoveAny: false,
+      removeExplicitImplicitAny: false,
     },
   ],
   create(context) {
@@ -51,6 +58,8 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
     const options = {
       ignoreAnyParameters: context.options[0]?.ignoreAnyParameters ?? true,
       unsafeRemoveAny: context.options[0]?.unsafeRemoveAny ?? false,
+      removeExplicitImplicitAny:
+        context.options[0]?.removeExplicitImplicitAny ?? false,
     };
 
     const parserServices = ESLintUtils.getParserServices(context);
@@ -103,6 +112,9 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
               typesAreEqual(calleeType, paramType) ||
               (options.unsafeRemoveAny && isTypeAny(paramType))
             ) {
+              if (isTypeAny(calleeType) && !options.removeExplicitImplicitAny) {
+                return;
+              }
               const paramNode = parserServices.tsNodeToESTreeNodeMap.get(param);
               context.report({
                 node: paramNode,
@@ -155,6 +167,12 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs<Options, MessageIds>({
                   paramTypeFromCallee === paramType ||
                   (options.unsafeRemoveAny && isTypeAny(paramType))
                 ) {
+                  if (
+                    isTypeAny(paramTypeFromCallee) &&
+                    !options.removeExplicitImplicitAny
+                  ) {
+                    return;
+                  }
                   const paramNode =
                     parserServices.tsNodeToESTreeNodeMap.get(param);
                   context.report({
